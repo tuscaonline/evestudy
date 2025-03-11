@@ -1,8 +1,20 @@
 import pytest
 from src.evestudy import bddmodel
 
+from sqlalchemy import Engine, create_engine
+from sqlalchemy.orm import Session
+from sqlalchemy import select
 
-def test_loadType():
+
+@pytest.fixture
+def createDb():
+    engine = create_engine("sqlite://")
+    bddmodel.Base.metadata.create_all(engine)
+    return engine
+
+
+@pytest.fixture
+def scourge() -> bddmodel.Types:
     scourge = {
         "basePrice": 30000.0,
         "description": {
@@ -37,10 +49,42 @@ def test_loadType():
         "volume": 0.05,
     }
     idScourge = 267
+    scourge = bddmodel.Types.load(idScourge, **scourge)
 
-    alchmy= bddmodel.Types.load(
-        idScourge,
-        **scourge
+    dTypeMaterials = [
+        {"materialTypeID": 34, "quantity": 1876},
+        {"materialTypeID": 39, "quantity": 12},
+        {"materialTypeID": 40, "quantity": 4},
+    ]
+    materials = []
+    for i in dTypeMaterials:
+        materials.append(
+            bddmodel.TypeMaterials(**i)
+        )
+    scourge.materials = materials
+    return scourge
+
+
+def test_scourge(createDb: Engine, scourge: bddmodel.Types):
+    assert scourge.nameFr == "Torpille Scourge"
+    assert (
+        scourge.__repr__()
+        == "Types(id=267, name='Scourge Torpedo', fullname='An ultra-heavy piercing missile. While it is a slow projectile, its sheer damage potential is simply staggering.')"
     )
-    assert alchmy.nameFr == "Torpille Scourge"
-    assert alchmy.__repr__() == "Types(id=267, name='Scourge Torpedo', fullname='An ultra-heavy piercing missile. While it is a slow projectile, its sheer damage potential is simply staggering.')"
+
+
+def test_insertScourge(createDb: Engine, scourge: bddmodel.Types):
+    engine = createDb
+
+    with Session(engine) as session:
+        session.add(scourge)
+        session.commit()
+
+    session = Session(engine)
+    stmt = select(bddmodel.Types).where(bddmodel.Types.id == 267)
+    result = session.scalars(stmt).one()
+    assert result.id == 267
+    assert result.nameEn == "Scourge Torpedo"
+    assert len(result.materials) == 3
+    ...
+    

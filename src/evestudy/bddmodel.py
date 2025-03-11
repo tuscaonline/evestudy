@@ -4,7 +4,7 @@ from sqlalchemy import String, JSON
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, foreign
 
 
 class Base(DeclarativeBase):
@@ -44,11 +44,13 @@ class Types(Base):
     description: Mapped[Optional[JSON]] = mapped_column(type_=JSON)
     name: Mapped[Optional[JSON]] = mapped_column(type_=JSON)
 
+    materials: Mapped[List["TypeMaterials"]] = relationship(back_populates="parentType")
+
     def __repr__(self) -> str:
         return f"Types(id={self.id!r}, name={self.nameEn!r}, fullname={self.descriptionEn!r})"
 
     @classmethod
-    def load(cls, id: int, description: dict={}, name: dict={}, **kwArgs):
+    def load(cls, id: int, description: dict = {}, name: dict = {}, **kwArgs):
         return cls(
             id=id,
             description=description,
@@ -57,8 +59,25 @@ class Types(Base):
             descriptionFr=description.get("fr"),
             nameEn=name.get("en"),
             nameFr=name.get("fr"),
-            **kwArgs
+            **kwArgs,
         )
+
+
+class TypeMaterials(Base):
+    __tablename__ = "typeMaterials"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    materialTypeID: Mapped[int]  
+    # material: Mapped["Types"] = relationship(
+    #     primaryjoin="typeMaterials.materialTypeID==Types.id",
+    #     single_parent=True,
+    #     viewonly=True,
+    # )
+
+    quantity: Mapped[int]
+    parentTypeId: Mapped[int] = mapped_column(ForeignKey("types.id"))
+    parentType: Mapped["Types"] = relationship(
+        back_populates="materials", foreign_keys=[parentTypeId]
+    )
 
 
 # class Address(Base):

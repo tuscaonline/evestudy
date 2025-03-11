@@ -1,0 +1,25 @@
+[project]
+name = "evestudy"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Pierre Nerriere",email = "pierre.nerriere_externe@rte-france.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "ipykernel (>=6.29.5,<7.0.0)",
+    "rich[jupyter] (>=13.9.4,<14.0.0)",
+    "click (>=8.1.8,<9.0.0)",
+    "pandas (>=2.2.3,<3.0.0)",
+    "pyyaml (>=6.0.2,<7.0.0)",
+    "sqlalchemy (>=2.0.38,<3.0.0)"
+]
+
+[tool.poetry]
+packages = [{include = "evestudy", from = "src"}]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
